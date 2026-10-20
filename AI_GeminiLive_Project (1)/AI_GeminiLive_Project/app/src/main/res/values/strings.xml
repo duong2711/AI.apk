@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AI</string>
+    <string name="accessibility_description">Tìm và bấm nút Open Gemini Live trong ứng dụng Google/Gemini sau khi bạn mở AI.</string>
+</resources>
