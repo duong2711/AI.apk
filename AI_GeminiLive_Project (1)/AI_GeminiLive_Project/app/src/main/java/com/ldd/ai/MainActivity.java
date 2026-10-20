@@ -37,6 +37,7 @@ public class MainActivity extends Activity {
 
     private static void run(Context activityContext) {
         final Context ctx = activityContext.getApplicationContext();
+        GeminiLiveAccessibilityService.armedUntil = System.currentTimeMillis() + 10000;
         try {
             if (!Shizuku.pingBinder()) {
                 toast(ctx, "Shizuku chưa chạy. Hãy mở Shizuku và bấm Start.");
