@@ -53,15 +53,32 @@ public final class Trigger {
         }
     }
 
+    private static final String ENSURE_A11Y =
+            "cur=$(settings get secure enabled_accessibility_services); "
+          + "svc=com.ldd.ai/com.ldd.ai.GeminiLiveAccessibilityService; "
+          + "case \"$cur\" in "
+          + "*\"$svc\"*) ;; "
+          + "null|\"\") settings put secure enabled_accessibility_services $svc;; "
+          + "*) settings put secure enabled_accessibility_services \"$cur:$svc\";; "
+          + "esac; "
+          + "settings put secure accessibility_enabled 1";
+
+    private static Process shell(String... cmd) throws Exception {
+        Method m = Shizuku.class.getDeclaredMethod(
+                "newProcess", String[].class, String[].class, String.class);
+        m.setAccessible(true);
+        return (Process) m.invoke(null, cmd, null, null);
+    }
+
     private static void sendLongPressPower(final Context ctx) {
         new Thread(() -> {
             try {
-                String[] cmd = {"input", "keyevent", "--duration", "2000", "KEYCODE_POWER"};
-                Method m = Shizuku.class.getDeclaredMethod(
-                        "newProcess", String[].class, String[].class, String.class);
-                m.setAccessible(true);
-                Process p = (Process) m.invoke(null, cmd, null, null);
-                p.waitFor();
+                // Bật lại quyền Trợ năng nếu hệ thống đã tắt nó.
+                try {
+                    shell("sh", "-c", ENSURE_A11Y).waitFor();
+                } catch (Throwable ignored) {
+                }
+                shell("input", "keyevent", "--duration", "2000", "KEYCODE_POWER").waitFor();
             } catch (Throwable t) {
                 toast(ctx, "Không chạy được lệnh: " + t);
             }
