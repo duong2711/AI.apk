@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.PowerManager;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -28,13 +29,14 @@ public class WakeService extends Service {
     private static final String PHRASE = "open gemini";
     private static final long COOLDOWN_MS = 6000;
     private static final long MIN_GAP_BEFORE_MS = 1200;
-    private static final long QUIET_AFTER_MS = 1500;
+    private static final long QUIET_AFTER_MS = 1000;
     /** Điểm tin cậy tối thiểu (0..1) cho từng từ. */
     private static final double MIN_CONF = 0.85;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Model model;
     private SpeechService speech;
+    private PowerManager.WakeLock cpuWakeLock;
 
     // Trạng thái (chỉ đụng tới trên luồng chính)
     private boolean inUtterance = false;
@@ -51,6 +53,15 @@ public class WakeService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         startForeground(1, buildNotification("AI đang nghe \"" + PHRASE + "\""));
+        // Giữ CPU thức khi màn hình tắt để Vosk tiếp tục nhận diện câu lệnh.
+        try {
+            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+            if (cpuWakeLock == null) {
+                cpuWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "AI:WakeService");
+                cpuWakeLock.setReferenceCounted(false);
+            }
+            if (!cpuWakeLock.isHeld()) cpuWakeLock.acquire();
+        } catch (Throwable ignored) { }
         if (speech == null) startEngine();
         return START_STICKY;
     }
@@ -82,7 +93,7 @@ public class WakeService extends Service {
                 }
                 model = new Model(ModelManager.modelDir(this).getAbsolutePath());
                 Recognizer rec = new Recognizer(model, 16000.0f,
-                        "[\"" + PHRASE + "\", \"[unk]\"]");
+                        "[\""+ PHRASE +"\", \"[unk]\"]");
                 rec.setWords(true);
                 speech = new SpeechService(rec, 16000.0f);
                 speech.startListening(listener);
@@ -147,7 +158,7 @@ public class WakeService extends Service {
         if (gapBefore < MIN_GAP_BEFORE_MS) return;        // vừa có tiếng nói trước đó -> bỏ
         if (now - lastFire < COOLDOWN_MS) return;
 
-        // Đợi yên lặng thêm một lúc; nếu có tiếng nói tiếp thì hủy.
+        // Đợi yên lặng thêm 1 giây; nếu có tiếng nói tiếp thì hủy.
         pending = () -> {
             pending = null;
             lastFire = System.currentTimeMillis();
@@ -175,6 +186,10 @@ public class WakeService extends Service {
         } catch (Throwable ignored) {
         }
         speech = null;
+        try {
+            if (cpuWakeLock != null && cpuWakeLock.isHeld()) cpuWakeLock.release();
+        } catch (Throwable ignored) { }
+        cpuWakeLock = null;
         super.onDestroy();
     }
 }
