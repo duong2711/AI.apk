@@ -12,11 +12,11 @@ import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-/** Tải và giải nén mô hình nhận dạng giọng nói offline (Vosk, tiếng Anh, ~40MB). */
+/** Tải và giải nén mô hình nhận dạng giọng nói offline Vosk tiếng Việt. */
 public final class ModelManager {
     private static final String URL_ZIP =
-            "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip";
-    private static final String NAME = "vosk-model-small-en-us-0.15";
+            "https://alphacephei.com/vosk/models/vosk-model-small-vn-0.4.zip";
+    private static final String NAME = "vosk-model-small-vn-0.4";
 
     private ModelManager() {}
 

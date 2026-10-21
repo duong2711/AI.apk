@@ -10,7 +10,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-/** Màn hình cài đặt: bật/tắt nghe "Hey Gemini". */
+/** Màn hình cài đặt: bật/tắt nghe lệnh đánh thức tiếng Việt. */
 public class SetupActivity extends Activity {
     private static final int REQ_MIC = 7;
     private TextView status;
@@ -25,7 +25,7 @@ public class SetupActivity extends Activity {
         layout.setPadding(pad, pad, pad, pad);
 
         TextView title = new TextView(this);
-        title.setText("AI – Hey Gemini");
+        title.setText("AI – nghe lệnh tiếng Việt");
         title.setTextSize(26);
         title.setGravity(Gravity.CENTER);
         layout.addView(title);
@@ -34,11 +34,11 @@ public class SetupActivity extends Activity {
         status.setTextSize(16);
         status.setGravity(Gravity.CENTER);
         status.setPadding(0, pad, 0, pad);
-        status.setText("Bấm \"Bật nghe Hey Gemini\". Lần đầu sẽ tải mô hình giọng nói (~40MB).");
+        status.setText("Bấm \"Bật nghe Ây Ai\". Lần đầu sẽ tải mô hình giọng nói (~40MB).");
         layout.addView(status);
 
         Button start = new Button(this);
-        start.setText("Bật nghe Hey Gemini");
+        start.setText("Bật nghe Ây Ai");
         start.setOnClickListener(v -> {
             if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -58,7 +58,7 @@ public class SetupActivity extends Activity {
         layout.addView(stop);
 
         Button test = new Button(this);
-        test.setText("Thử gọi Gemini ngay");
+        test.setText("Thử mở Gemini ngay");
         test.setOnClickListener(v -> Trigger.fire(this, true));
         layout.addView(test);
 
@@ -72,7 +72,7 @@ public class SetupActivity extends Activity {
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             startAll();
         } else {
-            setStatus("Cần cấp quyền micro để nghe \"Hey Gemini\".");
+            setStatus("Cần cấp quyền micro để nghe lệnh \"Ây Ai\".");
         }
     }
 
@@ -89,7 +89,7 @@ public class SetupActivity extends Activity {
             }
             runOnUiThread(() -> {
                 startForegroundService(new Intent(this, WakeService.class));
-                status.setText("Đang nghe \"Hey Gemini\". Có thể thoát màn hình này.");
+                status.setText("Đang nghe \"Ây Ai\" / \"Mở AI\". Có thể vuốt màn hình Cài đặt khỏi đa nhiệm; dịch vụ nghe nền tiếp tục nếu Android cho phép.");
             });
         }).start();
     }

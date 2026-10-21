@@ -18,15 +18,16 @@ import org.vosk.android.RecognitionListener;
 import org.vosk.android.SpeechService;
 
 /**
- * Dịch vụ nền nghe lệnh "open gemini" (offline).
+ * Dịch vụ nền nghe lệnh đánh thức tiếng Việt (offline).
  * Chỉ kích hoạt khi câu nói CHỈ gồm đúng lệnh đó:
  *  - không có tiếng nói nào ngay trước đó (khoảng lặng >= MIN_GAP_BEFORE_MS),
- *  - câu đã chốt đúng bằng "open gemini" (có từ khác thì bị [unk] và bị loại),
+ *  - câu đã chốt đúng bằng một trong các câu đánh thức được cho phép,
  *  - sau đó yên lặng thêm QUIET_AFTER_MS mà không có tiếng nói mới.
  */
 public class WakeService extends Service {
     private static final String CHANNEL = "wake";
-    private static final String PHRASE = "open gemini";
+    private static final String PHRASE = "ây ai";
+    private static final String[] WAKE_PHRASES = {"ây ai", "mở ai", "mở a i"};
     private static final long COOLDOWN_MS = 6000;
     private static final long MIN_GAP_BEFORE_MS = 1200;
     private static final long QUIET_AFTER_MS = 1000;
@@ -69,9 +70,9 @@ public class WakeService extends Service {
     private Notification buildNotification(String text) {
         NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         nm.createNotificationChannel(
-                new NotificationChannel(CHANNEL, "Open Gemini", NotificationManager.IMPORTANCE_LOW));
+                new NotificationChannel(CHANNEL, "AI – nghe lệnh tiếng Việt", NotificationManager.IMPORTANCE_LOW));
         return new Notification.Builder(this, CHANNEL)
-                .setContentTitle("AI – Open Gemini")
+                .setContentTitle("AI – nghe lệnh tiếng Việt")
                 .setContentText(text)
                 .setSmallIcon(android.R.drawable.ic_btn_speak_now)
                 .setOngoing(true)
@@ -93,7 +94,7 @@ public class WakeService extends Service {
                 }
                 model = new Model(ModelManager.modelDir(this).getAbsolutePath());
                 Recognizer rec = new Recognizer(model, 16000.0f,
-                        "[\""+ PHRASE +"\", \"[unk]\"]");
+                        "[\"ây ai\", \"mở ai\", \"mở a i\", \"[unk]\"]");
                 rec.setWords(true);
                 speech = new SpeechService(rec, 16000.0f);
                 speech.startListening(listener);
@@ -153,7 +154,7 @@ public class WakeService extends Service {
         cancelPending();
         updateNotification("Nghe: \"" + text + "\" (" + String.format("%.2f", minConf) + ")");
 
-        if (!text.equals(PHRASE)) return;                 // có từ khác -> bỏ
+        if (!isWakePhrase(text)) return;                  // chỉ nhận đúng câu đánh thức
         if (minConf < MIN_CONF) return;                   // nghe không chắc -> bỏ
         if (gapBefore < MIN_GAP_BEFORE_MS) return;        // vừa có tiếng nói trước đó -> bỏ
         if (now - lastFire < COOLDOWN_MS) return;
@@ -167,11 +168,25 @@ public class WakeService extends Service {
         handler.postDelayed(pending, QUIET_AFTER_MS);
     }
 
+    private boolean isWakePhrase(String text) {
+        for (String phrase : WAKE_PHRASES) {
+            if (phrase.equals(text)) return true;
+        }
+        return false;
+    }
+
     private void cancelPending() {
         if (pending != null) {
             handler.removeCallbacks(pending);
             pending = null;
         }
+    }
+
+    /** Vuốt màn hình Cài đặt khỏi đa nhiệm không đồng nghĩa với yêu cầu tắt nghe.
+     * Dịch vụ foreground tiếp tục chạy; Android/OEM vẫn có thể áp dụng giới hạn nền riêng. */
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
     }
 
     @Override

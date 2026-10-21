@@ -1,8 +1,8 @@
-ỨNG DỤNG AI – MỞ GEMINI LIVE (MÃ NGUỒN)
+ỨNG DỤNG AI – MỞ GEMINI LIVE – NHẬN LỆNH TIẾNG VIỆT (MÃ NGUỒN)
 
 Mục tiêu
 - Tên hiển thị ứng dụng: AI
-- Khi Xiaomi AI mở ứng dụng AI, ứng dụng sẽ mở Google/Gemini.
+- Khi Xiaomi AI mở ứng dụng AI, ứng dụng sẽ gọi thao tác mở Gemini Live. Dịch vụ nghe nền nhận lệnh “Ây Ai” hoặc “Mở AI”.
 - Dịch vụ Trợ năng tìm nút “Open Gemini Live” theo resource-id hoặc mô tả trợ năng rồi bấm nút đó.
 
 QUAN TRỌNG
@@ -11,7 +11,8 @@ QUAN TRỌNG
 - Cần bật Trợ năng thủ công trên điện thoại; Android không cho ứng dụng tự cấp quyền này.
 - Xiaomi AI phải có khả năng mở ứng dụng theo tên “AI”. Tính năng này phụ thuộc bản ROM.
 - Google có thể thay đổi giao diện hoặc resource-id; nếu vậy ứng dụng có thể cần cập nhật.
-- Không có chức năng nghe từ khóa “OK Google” nền; ứng dụng chỉ thực hiện khi được mở.
+- Dịch vụ nghe nền dùng foreground service. Vuốt màn hình Cài đặt khỏi đa nhiệm không phải là lệnh tắt nghe; tuy vậy một số ROM Xiaomi có thể tự giới hạn dịch vụ và cần bật Tự khởi động/Không hạn chế pin.
+- Câu đánh thức hiện hỗ trợ “Ây Ai”, “Mở AI”. Mô hình Vosk tiếng Việt cần được tải lần đầu.
 
 CÁCH BIÊN DỊCH
 1. Cài Android Studio trên máy tính.
