@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.widget.Toast;
 
 import java.lang.reflect.Method;
@@ -72,15 +73,30 @@ public final class Trigger {
 
     private static void sendLongPressPower(final Context ctx) {
         new Thread(() -> {
+            PowerManager.WakeLock screenWakeLock = null;
             try {
+                // Đánh thức màn hình trước khi mô phỏng thao tác giữ nút nguồn.
+                PowerManager pm = (PowerManager) ctx.getSystemService(Context.POWER_SERVICE);
+                screenWakeLock = pm.newWakeLock(
+                        PowerManager.SCREEN_BRIGHT_WAKE_LOCK
+                                | PowerManager.ACQUIRE_CAUSES_WAKEUP
+                                | PowerManager.ON_AFTER_RELEASE,
+                        "AI:GeminiWake");
+                screenWakeLock.acquire(6000);
+
                 // Bật lại quyền Trợ năng nếu hệ thống đã tắt nó.
                 try {
                     shell("sh", "-c", ENSURE_A11Y).waitFor();
                 } catch (Throwable ignored) {
                 }
+                // Giữ 2000 ms vì đây là thời lượng đã xác nhận kích hoạt Gemini Overlay trên máy.
                 shell("input", "keyevent", "--duration", "2000", "KEYCODE_POWER").waitFor();
             } catch (Throwable t) {
                 toast(ctx, "Không chạy được lệnh: " + t);
+            } finally {
+                try {
+                    if (screenWakeLock != null && screenWakeLock.isHeld()) screenWakeLock.release();
+                } catch (Throwable ignored) { }
             }
         }).start();
     }
